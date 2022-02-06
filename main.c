@@ -304,7 +304,7 @@ void run_wordle(void)
                     kb_y = 2;
                 }
                 if(kb_x >= kb_coords[kb_y]) {
-                    kb_x = kb_coords[kb_y];
+                    kb_x = kb_coords[kb_y] - 1;
                 }
                 highlight_key();
                 waitpadup();
