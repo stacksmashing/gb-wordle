@@ -13,8 +13,8 @@
 #include <stdint.h>
 #include <rand.h>
 
-#include "wordlist.h"
-#include "filter.h"
+#include "wordlist.c"
+#include "filter.c"
 #include "bloom.h"
 
 

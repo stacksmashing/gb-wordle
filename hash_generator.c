@@ -6,7 +6,7 @@
 
 #include <stdio.h>
 
-#include "../bloom.h"
+#include "bloom.h"
 
 int main(int argc, char *argv[]) {
     unsigned int bloom_size = 5000;

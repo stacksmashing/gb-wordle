@@ -15,7 +15,7 @@ LCC = $(GBDK_HOME)bin/lcc
 PROJECTNAME    = WORDLE
 
 BINS	    = $(PROJECTNAME).gb
-CSOURCES   := $(wildcard *.c)
+CSOURCES   := main.c bloom.c
 ASMSOURCES := $(wildcard *.s)
 
 all:	$(BINS)
@@ -25,8 +25,11 @@ compile.bat: Makefile
 	@make -sn | sed y/\\//\\\\/ | grep -v make >> compile.bat
 
 # Compile and link all source files in a single call to LCC
-$(BINS):	$(CSOURCES) $(ASMSOURCES)
-	$(LCC) -o $@ $(CSOURCES) $(ASMSOURCES)
+$(BINS): $(CSOURCES) $(ASMSOURCES)
+	$(LCC) -o $@ $^
+
+hash_generator: hash_generator.c bloom.c
+	$(CC) -o $^
 
 clean:
 	rm -f *.o *.lst *.map *.gb *.ihx *.sym *.cdb *.adb *.asm
