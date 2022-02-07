@@ -216,13 +216,17 @@ void show_win() {
     reset();
 }
 
-void show_loose() {
+void show_lose(char *correct_word) {
     // cls();
+    char ans[12] = " Answer: ";
     color(BLACK, BLACK, M_FILL);
     box(0, 0, 160, 144, M_FILL);
     gotogxy(0, 8);
     color(WHITE, BLACK, M_NOFILL);
     gprint(" You lost. Sorry!");
+    gotogxy(0, 10);
+    color(WHITE, BLACK, M_NOFILL);
+    gprint(strncat(ans, correct_word, 5));
     waitpad(J_START | J_A);
     reset();
 }
@@ -338,7 +342,7 @@ void run_wordle(void)
                     break;
                 }
                 if(guess_nr == 6) {
-                    show_loose();
+                    show_lose(word);
                     return;
                     break;
                 }
