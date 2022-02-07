@@ -13,15 +13,13 @@
 #include <stdint.h>
 #include <rand.h>
 
-#include "wordlist.h"
-#include "filter.h"
-#include "bloom.h"
+#include "word-db.h"
 
+#define MAX_GUESSES 6
 
 void set_box_color_for_letter(char *word, int position, char letter);
 void set_letter_color_for_letter(char *word, int position, char letter);
 
-bloom_t bloom;
 const char *kb[3] = {
 "Q W E R T Y U I O P",
 " A S D F G H J K L",
@@ -42,12 +40,12 @@ int kb_offsets[3] = {
 int kb_x = 0;
 int kb_y = 0;
 int guess_nr;
-char guess[6];
-char guesses[6][5];
+char guess[WORD_LENGTH+1];
+char guesses[WORD_LENGTH+1][MAX_GUESSES];
 char guessed_wrong[30];
 char guessed_position[30];
 char guessed_correct[30];
-char word[6];
+char word[WORD_LENGTH+1];
 
 void draw_word_rect(int x, int y, char *guess) {
     int gx = x/8;
@@ -192,7 +190,7 @@ void render_guess() {
 }
 
 void draw_board() {
-    for(int i=0; i < 6; i++) {
+    for(int i=0; i < MAX_GUESSES; i++) {
         char *g = NULL;
         if(i < guess_nr) {
             g = guesses[i];
@@ -206,7 +204,7 @@ void draw_board() {
 void show_win() {
     
     color(BLACK, BLACK, M_FILL);
-    box(0, 0, 160, 144, M_FILL);
+    box(0, 0, SCREENWIDTH, SCREENHEIGHT, M_FILL);
     gotogxy(0, 8);
     color(WHITE, BLACK, M_NOFILL);
     gprint("     You won!!!");
@@ -219,7 +217,7 @@ void show_win() {
 void show_loose() {
     // cls();
     color(BLACK, BLACK, M_FILL);
-    box(0, 0, 160, 144, M_FILL);
+    box(0, 0, SCREENWIDTH, SCREENHEIGHT, M_FILL);
     gotogxy(0, 8);
     color(WHITE, BLACK, M_NOFILL);
     gprint(" You lost. Sorry!");
@@ -229,7 +227,7 @@ void show_loose() {
 
 
 void analyze_guess(char *guess) {
-    for(int i =0; i < 5; i++) {
+    for(int i = 0; i < WORD_LENGTH; i++) {
         if(guess[i] == word[i]) {
             guessed_correct[strlen(guessed_correct)] = guess[i];
         } else if(contains(word, guess[i])) {
@@ -246,15 +244,15 @@ void run_wordle(void)
     int has_random = 0;
     
     guess_nr = 0;
-    memset(guess, 0, 5);
-    memset(guessed_wrong, 0, 30);
-    memset(guessed_position, 0, 30);
-    memset(guessed_correct, 0, 30);
+    memset(guess, 0, sizeof(guess));
+    memset(guessed_wrong, 0, sizeof(guessed_wrong));
+    memset(guessed_position, 0, sizeof(guessed_position));
+    memset(guessed_correct, 0, sizeof(guessed_correct));
 
-    for(int i=0; i < 6; i++) {
+    for(int i=0; i < MAX_GUESSES; i++) {
         strcpy(guesses[i], "");
     }
-    for(int i=0; i < 6; i++) {
+    for(int i=0; i < MAX_GUESSES; i++) {
         draw_word_rect(40, 16+(i*16), NULL);
     }
 
@@ -274,7 +272,7 @@ void run_wordle(void)
             while(r > 211) {
                 r = rand();
             }
-            strcpy(word, words[r]);
+            get_word(r, word);
             has_random = 1;
         }
 
@@ -323,9 +321,8 @@ void run_wordle(void)
                 break;
             case J_SELECT:
             case J_START:
-                if(strlen(guess) != 5) break;
-                if(!bloom_test(bloom, guess)) break;
-                // bool bloom_test(bloom_t filter, const void *item);
+                if(strlen(guess) != WORD_LENGTH) break;
+                if(!query_word(guess)) break;
                 analyze_guess(guess);
                 strcpy(guesses[guess_nr], guess);
                 guess_nr += 1;
@@ -337,7 +334,7 @@ void run_wordle(void)
                     return;
                     break;
                 }
-                if(guess_nr == 6) {
+                if(guess_nr == MAX_GUESSES) {
                     show_loose();
                     return;
                     break;
@@ -347,7 +344,7 @@ void run_wordle(void)
                 // TODO
                 break;
             case J_A:
-                if(strlen(guess) == 5) break;
+                if(strlen(guess) == WORD_LENGTH) break;
                 guess[strlen(guess)] = getletter();
                 render_guess();
                 waitpadup();
@@ -367,10 +364,6 @@ void run_wordle(void)
 }
 
 void main() {
-    // Initialize bloom filter
-    bloom = bloom_create_existing(bloom_data_len, bloom_data);
-    bloom_add_hash(bloom, djb2);
-
     while(1) {
         run_wordle();    
     }
