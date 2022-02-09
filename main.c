@@ -13,15 +13,11 @@
 #include <stdint.h>
 #include <rand.h>
 
-#include "wordlist.h"
-#include "filter.h"
-#include "bloom.h"
-
+#include "decode.h"
 
 void set_box_color_for_letter(char *word, int position, char letter);
 void set_letter_color_for_letter(char *word, int position, char letter);
 
-bloom_t bloom;
 const char *kb[3] = {
 "Q W E R T Y U I O P",
 " A S D F G H J K L",
@@ -204,14 +200,19 @@ void draw_board() {
 
 
 void show_win() {
-    
     color(BLACK, BLACK, M_FILL);
     box(0, 0, 160, 144, M_FILL);
     gotogxy(0, 8);
     color(WHITE, BLACK, M_NOFILL);
     gprint("     You won!!!");
     gotogxy(0, 9);
-    gprintf("   %d/6 - Congrats!", guess_nr);
+    gprint("   ");
+    char s[2];
+    s[0] = '0'+guess_nr;
+    s[1] = 0;
+    gprint(s);
+    gprint("/6 - Congrats!");
+    //gprintf("   %d/6 - Congrats!", guess_nr);
     waitpad(J_START | J_A);
     reset();
 }
@@ -267,14 +268,15 @@ void run_wordle(void)
     while(1) {
         int j = joypad();
         if((has_random == 0) && (j != 0)) {
+            uint16_t n = getNumberOfSpecialWords();
             uint16_t seed = LY_REG;
             seed |= (uint16_t)DIV_REG << 8;
             initrand(seed);
             int r = rand();
-            while(r > 211) {
+            while(r >= n) {
                 r = rand();
             }
-            strcpy(word, words[r]);
+            getSpecialWord(r, word);
             has_random = 1;
         }
 
@@ -324,8 +326,7 @@ void run_wordle(void)
             case J_SELECT:
             case J_START:
                 if(strlen(guess) != 5) break;
-                if(!bloom_test(bloom, guess)) break;
-                // bool bloom_test(bloom_t filter, const void *item);
+                if(!filterWord(guess)) break;
                 analyze_guess(guess);
                 strcpy(guesses[guess_nr], guess);
                 guess_nr += 1;
@@ -367,10 +368,6 @@ void run_wordle(void)
 }
 
 void main() {
-    // Initialize bloom filter
-    bloom = bloom_create_existing(bloom_data_len, bloom_data);
-    bloom_add_hash(bloom, djb2);
-
     while(1) {
         run_wordle();    
     }
