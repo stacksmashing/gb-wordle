@@ -1,14 +1,16 @@
+outfile = open('../encoded.h', 'w')
+
 def dumpBlob(name, blob):
     n = len(blob)
-    print("const uint8_t %s[%u] = {" % (name, n))
+    outfile.write("const uint8_t %s[%u] = {\n" % (name, n))
     i = 0
     while i < n:
-        print("  ",end='')
+        outfile.write("  ")
         for j in range(min(n-i,20)):
-            print("0x%02x," % blob[i],end='')
+            outfile.write("0x%02x," % blob[i])
             i+=1
-        print("")
-    print("};\n")
+        outfile.write("\n")
+    outfile.write("};\n\n")
 
 def tobinary(w):
     s = 0
@@ -71,18 +73,24 @@ with open("answers.txt") as f:
 dumpBlob("wordBlob", wordBlob)
 dumpBlob("specialDeltas", deltas)
         
-print("""typedef struct {
+outfile.write("""typedef struct {
   uint16_t wordNumber;    
   uint16_t blobOffset;
 } LetterList_t;
 
-const LetterList_t words[27] = {""")
+const LetterList_t words[27] = {\n""")
 
 for i in range(27):
-    print("  /* %s */ { %u, %u }," % (str(chr(ord('a')+i)) if i < 26 else "end", sum(map(len,words[:i])), offsets[i]) )
+    outfile.write("  /* %s */ { %u, %u },\n" % (str(chr(ord('a')+i)) if i < 26 else "end", sum(map(len,words[:i])), offsets[i]) )
     
-print("};")    
-    
+outfile.write("};\n")    
+   
+outfile.close()
+
+with open("../sizes.h", "w") as sizes:
+    sizes.write("#define NUM_WORDS %u\n" % len(allwords))
+    sizes.write("#define NUM_ANSWERS %u\n" % len(deltas))
+   
 #print(sum(map(len, encoded)))
 #print(max(map(len, encoded)))
 

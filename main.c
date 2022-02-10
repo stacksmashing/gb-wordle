@@ -268,12 +268,12 @@ void run_wordle(void)
     while(1) {
         int j = joypad();
         if((has_random == 0) && (j != 0)) {
-            uint16_t n = getNumberOfSpecialWords();
+            uint16_t n = NUM_ANSWERS;
             uint16_t seed = LY_REG;
             seed |= (uint16_t)DIV_REG << 8;
             initrand(seed);
             int r = rand();
-            while(r >= n) {
+            while(r >= NUM_ANSWERS) {
                 r = rand();
             }
             getSpecialWord(r, word);

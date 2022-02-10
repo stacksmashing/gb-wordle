@@ -17,15 +17,19 @@ PROJECTNAME    = WORDLE
 BINS	    = $(PROJECTNAME).gb
 CSOURCES   := $(wildcard *.c)
 ASMSOURCES := $(wildcard *.s)
+CHEADERS   := $(wildcard *.h)
 
 all:	$(BINS)
+
+encoded.h sizes.h: compress/compress5.py compress/full.txt compress/answers.txt
+	cd compress && python3 compress5.py
 
 compile.bat: Makefile
 	@echo "REM Automatically generated from Makefile" > compile.bat
 	@make -sn | sed y/\\//\\\\/ | grep -v make >> compile.bat
 
 # Compile and link all source files in a single call to LCC
-$(BINS):	$(CSOURCES) $(ASMSOURCES)
+$(BINS):	$(CSOURCES) $(ASMSOURCES) $(CHEADERS)
 	$(LCC) -o $@ $(CSOURCES) $(ASMSOURCES)
 
 clean:
