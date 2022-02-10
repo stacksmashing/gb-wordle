@@ -18,8 +18,8 @@
 #include "bloom.h"
 
 
-void set_box_color_for_letter(char *word, int position, char letter);
-void set_letter_color_for_letter(char *word, int position, char letter);
+void set_box_color_for_letter(int position);
+void set_letter_color_for_letter(int position);
 
 bloom_t bloom;
 const char *kb[3] = {
@@ -48,6 +48,48 @@ char guessed_wrong[30];
 char guessed_position[30];
 char guessed_correct[30];
 char word[6];
+#define RIGHT_PLACE 2
+#define WRONG_PLACE 1
+#define WRONG_LETTER 0
+uint8_t eval[5]; 
+
+
+int contains(char *str, char c) {
+    int l = strlen(str);
+    int count = 0;
+    for(int i=0; i < l; i++) {
+        if(str[i] == c) {
+            count++;
+        } 
+    }
+    return count;
+}
+
+
+void evaluate_letters(char* guess) {
+    for (uint8_t i=0;i<5;i++) {
+        if (guess[i] == word[i]) 
+            eval[i] = RIGHT_PLACE;
+        else
+            eval[i] = WRONG_LETTER;
+    }
+    for (uint8_t i=0;i<5;i++) {
+        if (eval[i] == WRONG_LETTER) {
+            char c = guess[i];
+            uint8_t count = contains(word, c);
+            if (count) {
+                uint8_t already = 0;
+                for (uint8_t j=0;j<5;j++) {
+                    if (eval[j] && guess[j] == c)
+                        already++;
+                }
+                if (already < count)
+                    eval[i] = WRONG_PLACE;
+            }            
+        }
+    }
+}
+
 
 void draw_word_rect(int x, int y, char *guess) {
     int gx = x/8;
@@ -57,9 +99,9 @@ void draw_word_rect(int x, int y, char *guess) {
     for(int i=0; i < 5; i++) {
         if(guess) {
             char letter = guess[i];
-            set_box_color_for_letter(word, i, letter);
+            set_box_color_for_letter(i);
             box(x, y, x+14, y+14, M_FILL);
-            set_letter_color_for_letter(word, i, letter);
+            set_letter_color_for_letter(i);
             gotogxy(gx, gy);
             wrtchr(letter);
             gx += 2;
@@ -73,47 +115,22 @@ void draw_word_rect(int x, int y, char *guess) {
 }
 
 
-int contains(char *str, char c) {
-    int l = strlen(str);
-    for(int i=0; i < l; i++) {
-        if(str[i] == c) {
-            return 1;
-        } 
-    }
-    return 0;
-}
-
-
-
-void set_box_color_for_letter(char *word, int position, char letter) {
-    if(word[position] == letter) {
+void set_box_color_for_letter(int position) {
+    if(eval[position] == RIGHT_PLACE) {
         color(BLACK, BLACK, M_FILL);
-    } else if(contains(word, letter)) {
+    } else if(eval[position] == WRONG_PLACE) {
         color(BLACK, DKGREY, M_FILL);
     } else {
         color(BLACK, WHITE, M_NOFILL);
     }
 }
 
-void set_letter_color_for_letter(char *word, int position, char letter) {
-    if(word[position] == letter) {
-        color(WHITE, BLACK, M_NOFILL);
-    } else if(contains(word, letter)) {
-        color(WHITE, DKGREY, M_NOFILL);
-    } else {
-        color(BLACK, WHITE, M_NOFILL);
-    }
-}
 
-void set_color_for_gletter(char letter) {
-    if(letter == ' ') {
-        color(BLACK, WHITE, M_NOFILL);
-    } else if (contains(guessed_wrong, letter)) {
-        color(BLACK, WHITE, M_NOFILL);
-    } else if(contains(guessed_position, letter)) {
-        color(WHITE, WHITE, M_NOFILL);
-    } else if(contains(guessed_correct, letter)) {
-        color(WHITE, WHITE, M_NOFILL);
+void set_letter_color_for_letter(int position) {
+    if(eval[position] == RIGHT_PLACE) {
+        color(WHITE, BLACK, M_NOFILL);
+    } else if(eval[position] == WRONG_PLACE) {
+        color(WHITE, DKGREY, M_NOFILL);
     } else {
         color(BLACK, WHITE, M_NOFILL);
     }
