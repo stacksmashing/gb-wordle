@@ -74,13 +74,13 @@ void evaluate_letters(char* guess) {
             eval[i] = WRONG_LETTER;
     }
     for (uint8_t i=0;i<5;i++) {
-        if (eval[i] == 0) {
+        if (eval[i] == WRONG_LETTER) {
             char c = guess[i];
             uint8_t count = contains(word, c);
             if (count) {
                 uint8_t already = 0;
                 for (uint8_t j=0;j<5;j++) {
-                    if (eval[j] && guess[i] == c)
+                    if (eval[j] && guess[j] == c)
                         already++;
                 }
                 if (already < count)
